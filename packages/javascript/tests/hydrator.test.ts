@@ -13,6 +13,20 @@ const useSession = defineStore("session", {
   state: () => ({ user: "initial" }),
 });
 
+function addKeyReset<State extends StateTree>(
+  store: StoreGeneric,
+  initialState: State,
+): void {
+  store.$reset = (key?: string) => {
+    if (key) {
+      store[key] = initialState[key];
+      return;
+    }
+
+    store.$patch(initialState);
+  };
+}
+
 describe("createPiniaHydrator", () => {
   beforeEach(() => setActivePinia(createPinia()));
 
@@ -28,15 +42,58 @@ describe("createPiniaHydrator", () => {
   });
 
   it("resets included and omitted stores during full hydration", () => {
-    useCart().$patch({ count: 8, label: "changed" });
-    useSession().user = "changed";
+    const cart = useCart();
+    const session = useSession();
+    addKeyReset(cart, { count: 1, label: "old" });
+    addKeyReset(session, { user: "initial" });
+    cart.$patch({ count: 8, label: "changed" });
+    session.user = "changed";
     const hydrate = createPiniaHydrator({ cart: useCart, session: useSession });
     hydrate(
-      { modules: { cart: { state: { count: 9, label: "new" } } } },
+      { modules: { cart: { state: { count: 9 } } } },
       { resetMissing: true },
     );
-    expect(useCart().$state).toEqual({ count: 9, label: "new" });
+    expect(useCart().$state).toEqual({ count: 9, label: "old" });
     expect(useSession().$state).toEqual({ user: "initial" });
+  });
+
+  it("resets missing keys for an explicitly replaced module", () => {
+    const cart = useCart();
+    addKeyReset(cart, { count: 1, label: "old" });
+    cart.$patch({ count: 8, label: "changed" });
+    const hydrate = createPiniaHydrator({ cart: useCart });
+
+    hydrate({
+      modules: { cart: { mode: "replace", state: { count: 9 } } },
+    });
+
+    expect(cart.$state).toEqual({ count: 9, label: "old" });
+  });
+
+  it("preserves missing keys for partial module hydration", () => {
+    const cart = useCart();
+    addKeyReset(cart, { count: 1, label: "old" });
+    cart.$patch({ count: 8, label: "changed" });
+    const hydrate = createPiniaHydrator({ cart: useCart });
+
+    hydrate({ modules: { cart: { state: { count: 9 } } } });
+
+    expect(cart.$state).toEqual({ count: 9, label: "changed" });
+  });
+
+  it("preserves missing keys for lazy-loaded stores", () => {
+    const cart = useCart() as StoreGeneric & { _isLazyLoaded?: boolean };
+    addKeyReset(cart, { count: 1, label: "old" });
+    cart.$patch({ count: 8, label: "changed" });
+    cart._isLazyLoaded = true;
+    const hydrate = createPiniaHydrator({ cart: useCart });
+
+    hydrate(
+      { modules: { cart: { state: { count: 9 } } } },
+      { resetMissing: true },
+    );
+
+    expect(cart.$state).toEqual({ count: 9, label: "changed" });
   });
 
   it("supports explicitly preserved stores during full hydration", () => {

@@ -102,7 +102,10 @@ final class HydrationFactoryTest extends TestCase
             $this->assertFileExists($hydrator);
             $this->assertFileExists($store);
             $this->assertStringContainsString('final class CartHydrator', file_get_contents($hydrator));
-            $this->assertStringContainsString("defineStore('cart'", file_get_contents($store));
+            $storeContents = file_get_contents($store);
+            $this->assertStringContainsString("defineStore('cart', () => {", $storeContents);
+            $this->assertStringContainsString('function $reset(key?: string): void', $storeContents);
+            $this->assertStringNotContainsString('state: () =>', $storeContents);
             $this->assertFalse($this->app->make(ModuleRegistry::class)->has('cart'));
             $this->assertSame(1, Artisan::call('make:pinia-hydrator', ['name' => 'cart']));
         } finally {

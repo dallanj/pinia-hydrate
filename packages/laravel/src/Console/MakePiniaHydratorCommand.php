@@ -98,10 +98,25 @@ PHP;
         return <<<TS
 import { defineStore } from 'pinia'
 
-export const use{$class}Store = defineStore('{$module}', {
-  state: () => ({
-    // Define state shared with {$class}Hydrator here.
-  }),
+export const use{$class}Store = defineStore('{$module}', () => {
+  const resetters: Record<string, () => void> = {
+    // Add one resetter for each returned state ref.
+  }
+
+  function \$reset(key?: string): void {
+    if (key) {
+      resetters[key]?.()
+
+      return
+    }
+
+    Object.values(resetters).forEach((reset) => reset())
+  }
+
+  return {
+    // Return state refs shared with {$class}Hydrator here.
+    \$reset,
+  }
 })
 
 TS;
