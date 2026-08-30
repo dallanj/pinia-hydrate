@@ -1,0 +1,10 @@
+{
+  "name": "dallanj-pinia-hydrate-workspace",
+  "private": true,
+  "workspaces": ["packages/javascript"],
+  "scripts": {
+    "test": "npm run test --workspace=@dallanj/pinia-hydrate",
+    "build": "npm run build --workspace=@dallanj/pinia-hydrate",
+    "format": "npm run format --workspace=@dallanj/pinia-hydrate"
+  }
+}

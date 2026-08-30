@@ -1,0 +1,45 @@
+{
+  "name": "dallanj/laravel-pinia-hydrate",
+  "description": "Explicitly hydrate Pinia stores from Laravel responses.",
+  "keywords": ["laravel", "pinia", "vue", "hydration"],
+  "homepage": "https://github.com/dallanj/pinia-hydrate",
+  "license": "MIT",
+  "type": "library",
+  "support": {
+    "issues": "https://github.com/dallanj/pinia-hydrate/issues",
+    "source": "https://github.com/dallanj/pinia-hydrate"
+  },
+  "require": {
+    "php": "^8.2",
+    "illuminate/console": "^11.0 || ^12.0 || ^13.0",
+    "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
+    "illuminate/http": "^11.0 || ^12.0 || ^13.0",
+    "illuminate/support": "^11.0 || ^12.0 || ^13.0"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.18",
+    "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
+    "phpunit/phpunit": "^11.0 || ^12.0"
+  },
+  "autoload": {"psr-4": {"Dallanj\\PiniaHydrate\\": "packages/laravel/src/"}},
+  "autoload-dev": {"psr-4": {"Dallanj\\PiniaHydrate\\Tests\\": "packages/laravel/tests/"}},
+  "extra": {"laravel": {
+    "providers": ["Dallanj\\PiniaHydrate\\PiniaHydrateServiceProvider"],
+    "aliases": {"PiniaHydrate": "Dallanj\\PiniaHydrate\\Facades\\PiniaHydrate"}
+  }},
+  "scripts": {
+    "test": ["@test:php", "@test:js"],
+    "test:php": "phpunit --configuration packages/laravel/phpunit.xml --bootstrap vendor/autoload.php",
+    "test:js": "npm test --prefix packages/javascript",
+    "build:js": "npm run build --prefix packages/javascript",
+    "format": ["@format:php", "@format:js"],
+    "format:php": "pint packages/laravel/src packages/laravel/tests",
+    "format:js": "npm run format --prefix packages/javascript",
+    "format:test": ["@format:test:php", "@format:test:js"],
+    "format:test:php": "pint --test packages/laravel/src packages/laravel/tests",
+    "format:test:js": "npm run format:test --prefix packages/javascript"
+  },
+  "config": {"sort-packages": true, "allow-plugins": {"php-http/discovery": true}},
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
