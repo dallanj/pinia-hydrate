@@ -87,12 +87,9 @@ export function createPiniaHydrator(registrations: StoreMap): PiniaHydrator {
           : registration.useStore;
       const store = factory(options.pinia);
       const mode = entry.mode ?? (options.resetMissing ? "replace" : "patch");
-      if (mode === "replace") {
-        if (typeof store.$reset === "function") store.$reset();
-        store.$patch(entry.state);
-      } else {
-        store.$patch(entry.state);
-      }
+      importStateData(store, entry.state, {
+        resetMissingKeys: mode === "replace" || options.resetMissing === true,
+      });
     }
 
     if (options.resetMissing) {
@@ -112,6 +109,43 @@ export function createPiniaHydrator(registrations: StoreMap): PiniaHydrator {
       }
     }
   };
+}
+
+function importStateData(
+  store: StoreGeneric,
+  state: StateTree,
+  { resetMissingKeys = false }: { resetMissingKeys?: boolean } = {},
+): void {
+  const resettableStore = store as StoreGeneric & {
+    _isLazyLoaded?: boolean;
+    $reset?: (key?: string) => void;
+  };
+  const isLazyLoaded = resettableStore._isLazyLoaded ?? false;
+  const resetsIndividualKeys = (resettableStore.$reset?.length ?? 0) > 0;
+
+  if (
+    resetMissingKeys &&
+    !isLazyLoaded &&
+    typeof resettableStore.$reset === "function" &&
+    !resetsIndividualKeys
+  ) {
+    resettableStore.$reset();
+  }
+
+  for (const storeKey of Object.keys(store.$state)) {
+    if (Object.prototype.hasOwnProperty.call(state, storeKey)) {
+      store[storeKey] = state[storeKey];
+    } else if (resetMissingKeys && !isLazyLoaded) {
+      if (
+        typeof resettableStore.$reset === "function" &&
+        resetsIndividualKeys
+      ) {
+        resettableStore.$reset(storeKey);
+      } else if (typeof resettableStore.$reset !== "function") {
+        store[storeKey] = null;
+      }
+    }
+  }
 }
 
 export function createPiniaResponseInterceptor(hydrate: PiniaHydrator) {

@@ -46,10 +46,13 @@ hydratePinia(response.data);
 
 ## Hydration modes
 
-- `patch` calls the store's public `$patch()` method. Unspecified keys remain
-  unchanged.
-- `replace` resets the store through its public `$reset()` method, then patches
-  the supplied state.
+- `patch` imports supplied state keys. Unspecified keys remain unchanged.
+- `replace` imports supplied state keys and resets keys omitted from the
+  payload. Stores with a key-aware `$reset(key)` reset each omitted key;
+  standard Pinia stores reset before the supplied keys are imported.
+
+Stores marked with `_isLazyLoaded` preserve omitted keys during hydration.
+When a store has no `$reset()`, omitted keys fall back to `null`.
 
 By default, omitted stores are not reset. Pass `{ resetMissing: true }` for a
 full page hydration. A mapped store can opt out with
