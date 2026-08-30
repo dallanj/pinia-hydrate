@@ -1,6 +1,6 @@
 {
   "name": "@dallanj/pinia-hydrate",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Explicit Pinia hydration from versioned server payloads",
   "license": "MIT",
   "repository": {
